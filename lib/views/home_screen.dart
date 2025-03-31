@@ -9,17 +9,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  var message = "Click on the button to launch the request.";
+  var message = "Loading, please wait…"; // Uncompleted
+  Film? film;
 
   Future<void> _initFilm() async {
-    const url = "https://sebstreb.github.io/flutter-fiche-5/films-api/1";
     try {
-      setState(() => message = "Loading, please wait…"); // Uncompleted
-      var response = await http.get(Uri.parse(url));
-      setState(() => message = response.body); // Completed with a value
+      var response = await Film.fetchFilm(2);
+      setState(() => film = response); // Completed with a value
     } catch (error) {
-      setState(() => message = error.toString()); //Completed with an error
+      setState(() => message = error.toString()); // Completed with an error
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initFilm();
   }
 
   @override
@@ -31,15 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(child: Center(child: Text(message))),
-            ElevatedButton(
-              onPressed: _initFilm,
-              child: const Text("Fetch movie n°1"),
-            ),
-          ],
-        ),
+        child: film == null
+            ? Column(children: [Center(child: Text(message))])
+            : FilmRow(film: film!),
       ),
     );
   }
