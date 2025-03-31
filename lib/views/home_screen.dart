@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/film.dart';
+import 'film_row.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -9,22 +12,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  var message = "Loading, please wait…"; // Uncompleted
-  Film? film;
+  var message = "Loading…";
+  final films = <Film>[];
 
-  Future<void> _initFilm() async {
+  Future<void> _initFilms() async {
     try {
-      var response = await Film.fetchFilm(2);
-      setState(() => film = response); // Completed with a value
+      var response = await Film.fetchFilms();
+      setState(() {
+        if (response.isEmpty) message = "No films found";
+        films.addAll(response);
+      });
     } catch (error) {
-      setState(() => message = error.toString()); // Completed with an error
+      setState(() => message = error.toString());
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _initFilm();
+    _initFilms();
   }
 
   @override
@@ -36,9 +42,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: film == null
+        child: films.isEmpty
             ? Column(children: [Center(child: Text(message))])
-            : FilmRow(film: film!),
+            : ListView.separated(
+          itemCount: films.length,
+          itemBuilder: (context, index) => FilmRow(film: films[index]),
+          separatorBuilder: (context, index) => const Divider(),
+        ),
       ),
     );
   }

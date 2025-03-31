@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class Film {
@@ -22,21 +23,22 @@ class Film {
   String toString() =>
       'Film: $title, directed by $director, $duration min, $link';
 
-  static Future<Film> fetchFilm(int id) async {
-    var response = await http.get(Uri.parse("$baseUrl/$id"));
+  static Future<List<Film>> fetchFilms() async {
+    var response = await http.get(Uri.parse("$baseUrl/"));
 
     if (response.statusCode != 200) {
-      throw Exception("Error ${response.statusCode} fetching movie");
+      throw Exception("Error ${response.statusCode} fetching movies");
     }
 
-    final jsonObj = jsonDecode(response.body);
-
-    return Film(
-      id: jsonObj["id"],
-      title: jsonObj["title"],
-      director: jsonObj["director"],
-      duration: jsonObj["duration"],
-      link: jsonObj["link"],
-    );
+    return compute((input) {
+      final jsonList = jsonDecode(input);
+      return jsonList.map<Film>((jsonObj) => Film(
+        id: jsonObj["id"],
+        title: jsonObj["title"],
+        director: jsonObj["director"],
+        duration: jsonObj["duration"],
+        link: jsonObj["link"],
+      )).toList();
+    }, response.body);
   }
 }
